@@ -11,3 +11,9 @@ src/main/resources/application-local.yml
 
 # OS
 .DS_Store
+
+# Eclipse/STS output
+/bin/
+
+# Eclipse project metadata
+/.settings/
