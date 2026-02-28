@@ -1,0 +1,13 @@
+# Local environment config (contains machine/local secrets)
+src/main/resources/application-local.yml
+
+# Build outputs
+/build/
+/.gradle/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
