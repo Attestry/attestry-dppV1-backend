@@ -35,14 +35,6 @@ public class DevDataSeeder implements CommandLineRunner {
                 createIfAbsent("U_ADMIN", "kimsunwook@admin.com", "010-1111-1111",
                                 "adminsw00@", User.Role.ADMIN, User.Status.ACTIVE);
 
-                createIfAbsent("U_BRAND_01", "brand@test.com", "010-2222-2222",
-                                "brand123!", User.Role.BRAND, User.Status.ACTIVE);
-
-                createIfAbsent("U_OWNER_01", "owner@test.com", "010-3333-3333",
-                                "owner123!", User.Role.OWNER, User.Status.ACTIVE);
-
-                createIfAbsent("U_PROVIDER_01", "provider@test.com", "010-4444-4444",
-                                "provider123!", User.Role.PROVIDER, User.Status.ACTIVE);
         }
 
         private void createIfAbsent(String id, String email, String phone,
