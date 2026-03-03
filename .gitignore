@@ -4,6 +4,7 @@ src/main/resources/application-local.yml
 # Build outputs
 /build/
 /.gradle/
+/out/
 
 # IDE
 .idea/
