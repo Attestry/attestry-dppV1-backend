@@ -13,7 +13,7 @@ public interface RegistrationRepository {
     // 관리자용 페이징 조회 — 전체 조회 방지
     Page<RegistrationRequest> findByStatus(RegistrationStatus status, Pageable pageable);
 
-    List<RegistrationRequest> findByRequesterId(String requesterId);
+    Page<RegistrationRequest> findByRequesterId(String requesterId, Pageable pageable);
 
     List<RegistrationRequest> findBySerialNumberAndModelName(String serialNumber, String modelName);
 

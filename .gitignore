@@ -13,6 +13,7 @@ src/main/resources/application-prod.yml
 /.project
 /.opencode/
 
+
 # IDE
 .idea/
 *.iml
@@ -22,3 +23,12 @@ src/main/resources/application-prod.yml
 
 # OS
 .DS_Store
+
+# Eclipse/STS output
+/bin/
+
+# Eclipse project metadata
+/.settings/
+/.classpath
+/.project
+/.factorypath

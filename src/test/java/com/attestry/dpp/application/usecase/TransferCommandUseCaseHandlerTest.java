@@ -233,5 +233,20 @@ class TransferCommandUseCaseHandlerTest {
             assertThatThrownBy(() -> transferCommandUseCaseHandler.cancelTransfer("tr_1", "U_OWNER"))
                     .isInstanceOf(BadRequestException.class);
         }
+
+        @Test
+        @DisplayName("발신자가 아닌 사용자는 양도를 취소할 수 없다")
+        void nonInitiatorCannotCancelTransfer() {
+            TransferToken token = TransferToken.builder()
+                    .id("tr_1")
+                    .state(TransferState.INITIATED)
+                    .fromUser(ownerUser)
+                    .build();
+            when(transferRepository.findById("tr_1")).thenReturn(Optional.of(token));
+
+            assertThatThrownBy(() -> transferCommandUseCaseHandler.cancelTransfer("tr_1", "U_OTHER"))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("취소 권한");
+        }
     }
 }

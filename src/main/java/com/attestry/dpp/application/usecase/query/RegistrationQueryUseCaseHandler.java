@@ -11,8 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class RegistrationQueryUseCaseHandler implements RegistrationQueryUseCase {
@@ -32,10 +30,9 @@ public class RegistrationQueryUseCaseHandler implements RegistrationQueryUseCase
      * 요청자 본인이 제출한 등록 요청 목록을 조회합니다.
      */
     @Transactional(readOnly = true)
-    public List<RegistrationRequestResult> listRequestsByRequester(String requesterId) {
-        return registrationRepository.findByRequesterId(requesterId).stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<RegistrationRequestResult> listRequestsByRequester(String requesterId, Pageable pageable) {
+        return registrationRepository.findByRequesterId(requesterId, pageable)
+                .map(this::toResponse);
     }
 
     private RegistrationRequestResult toResponse(RegistrationRequest entity) {
