@@ -4,6 +4,7 @@ src/main/resources/application-local.yml
 # Build outputs
 /build/
 /.gradle/
+/out/
 
 # IDE
 .idea/
@@ -17,3 +18,6 @@ src/main/resources/application-local.yml
 
 # Eclipse project metadata
 /.settings/
+/.classpath
+/.project
+/.factorypath

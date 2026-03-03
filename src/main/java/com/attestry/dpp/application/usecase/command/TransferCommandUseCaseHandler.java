@@ -58,9 +58,10 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
     }
 
     @Transactional
-    public void cancelTransfer(String tokenId) {
+    public void cancelTransfer(String tokenId, String requesterId) {
         TransferToken transfer = transferRepository.findById(tokenId)
                 .orElseThrow(() -> new NotFoundException("이전 토큰을 찾을 수 없습니다."));
+        validateCancelPermission(transfer, requesterId);
 
         try {
             transfer.cancel();
@@ -68,6 +69,15 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
             throw new BadRequestException(e.getMessage());
         }
         transferRepository.save(transfer);
+    }
+
+    private void validateCancelPermission(TransferToken transfer, String requesterId) {
+        if (transfer.getFromUser() == null) {
+            throw new BadRequestException("취소 권한 정보를 확인할 수 없습니다.");
+        }
+        if (!transfer.getFromUser().getId().equals(requesterId)) {
+            throw new BadRequestException("이전 취소 권한이 없습니다.");
+        }
     }
 
     private TransferToken findInitiatedTransfer(String tokenOrCode) {

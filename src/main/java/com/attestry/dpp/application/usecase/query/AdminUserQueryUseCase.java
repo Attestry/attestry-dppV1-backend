@@ -1,9 +1,9 @@
 package com.attestry.dpp.application.usecase.query;
 
 import com.attestry.dpp.application.dto.result.AdminPendingUserResult;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AdminUserQueryUseCase {
-    List<AdminPendingUserResult> listPendingUsers();
+    Page<AdminPendingUserResult> listPendingUsers(Pageable pageable);
 }

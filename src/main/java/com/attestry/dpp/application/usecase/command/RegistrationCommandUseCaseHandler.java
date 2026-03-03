@@ -95,7 +95,6 @@ public class RegistrationCommandUseCaseHandler implements RegistrationCommandUse
         assetRepository.save(asset);
 
         DigitalPassport passport = DigitalPassport.issue(asset);
-        // ID 수동 할당 엔티티는 save() 시 merge 경로를 탈 수 있어, 반환된 managed 인스턴스를 후속 로직에 사용
         DigitalPassport savedPassport = passportRepository.save(passport);
 
         String dataJson = GenesisHashBuilder.buildDataJson(asset, savedPassport);

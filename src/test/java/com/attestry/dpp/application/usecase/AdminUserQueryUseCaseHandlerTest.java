@@ -10,6 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -28,6 +31,7 @@ class AdminUserQueryUseCaseHandlerTest {
     @Test
     @DisplayName("listPendingUsers: 대기 사용자 목록을 응답 DTO로 매핑한다")
     void listPendingUsers_mapsToResult() {
+        PageRequest pageable = PageRequest.of(0, 20);
         User pending = User.builder()
                 .id("U1")
                 .email("brand@test.com")
@@ -37,16 +41,16 @@ class AdminUserQueryUseCaseHandlerTest {
                 .businessNumber(null)
                 .brandName("Brand A")
                 .build();
-        when(userRepository.findByStatus(User.Status.PENDING)).thenReturn(List.of(pending));
+        when(userRepository.findByStatus(User.Status.PENDING, pageable))
+                .thenReturn(new PageImpl<>(List.of(pending), pageable, 1));
 
-        List<AdminPendingUserResult> result = handler.listPendingUsers();
+        Page<AdminPendingUserResult> result = handler.listPendingUsers(pageable);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getUserId()).isEqualTo("U1");
-        assertThat(result.get(0).getPhone()).isEmpty();
-        assertThat(result.get(0).getBusinessNumber()).isEmpty();
-        assertThat(result.get(0).getBrandName()).isEqualTo("Brand A");
-        assertThat(result.get(0).getStatus()).isEqualTo("PENDING");
+        assertThat(result.getContent().get(0).getUserId()).isEqualTo("U1");
+        assertThat(result.getContent().get(0).getPhone()).isNull();
+        assertThat(result.getContent().get(0).getBusinessNumber()).isNull();
+        assertThat(result.getContent().get(0).getBrandName()).isEqualTo("Brand A");
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("PENDING");
     }
 }
-
