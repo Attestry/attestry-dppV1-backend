@@ -1,13 +1,24 @@
 # Local environment config (contains machine/local secrets)
 src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
 
 # Build outputs
 /build/
 /.gradle/
+/bin/
+/out/
+/.settings/
+/.factorypath
+/.classpath
+/.project
+/.opencode/
 
 # IDE
 .idea/
 *.iml
+*.iws
+*.ipr
+.vscode/
 
 # OS
 .DS_Store

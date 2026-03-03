@@ -74,16 +74,8 @@ class PassportQueryUseCaseHandlerTest {
                 .hash("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
                 .occurredAt(LocalDateTime.of(2026, 1, 10, 13, 0))
                 .build();
-        RegistrationRequest request = RegistrationRequest.builder()
-                .requestId("REQ1")
-                .serialNumber("SN-001")
-                .modelName("Model X")
-                .evidenceUrls("[\"https://img.example.com/a.jpg\",\"https://img.example.com/b.jpg\"]")
-                .build();
-
-        when(passportRepository.findByQrPublicCode("QR111")).thenReturn(Optional.of(passport));
+        when(passportRepository.findByQrPublicCodeIgnoreCase("QR111")).thenReturn(Optional.of(passport));
         when(ownershipRepository.findById("P1")).thenReturn(Optional.of(ownership));
-        when(registrationRepository.findBySerialNumberAndModelName("SN-001", "Model X")).thenReturn(List.of(request));
         when(ledgerRepository.findByPassportIdOrderBySeqAsc("P1")).thenReturn(List.of(event));
         when(userRepository.findById("U_OWNER")).thenReturn(Optional.of(owner));
 
@@ -91,7 +83,7 @@ class PassportQueryUseCaseHandlerTest {
 
         assertThat(result.getPassportId()).isEqualTo("P1");
         assertThat(result.getModelName()).isEqualTo("Model X");
-        assertThat(result.getImageUrl()).isEqualTo("https://img.example.com/a.jpg");
+        assertThat(result.getImageUrl()).isNull();
         assertThat(result.getCurrentOwnerName()).startsWith("o");
         assertThat(result.getLedgerEvents()).hasSize(1);
         assertThat(result.getLedgerEvents().get(0).getAction()).isEqualTo("MINTED");
@@ -100,7 +92,7 @@ class PassportQueryUseCaseHandlerTest {
     @Test
     @DisplayName("getPublicPassport: QR 코드가 없으면 NotFoundException")
     void getPublicPassport_throwsWhenNotFound() {
-        when(passportRepository.findByQrPublicCode("missing")).thenReturn(Optional.empty());
+        when(passportRepository.findByQrPublicCodeIgnoreCase("missing")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> handler.getPublicPassport("missing"))
                 .isInstanceOf(NotFoundException.class);
@@ -136,5 +128,19 @@ class PassportQueryUseCaseHandlerTest {
         assertThat(page.getContent().get(0).getPassportId()).isEqualTo("P9");
         assertThat(page.getContent().get(0).getImageUrl()).isEqualTo("https://img.example.com/one.jpg");
     }
-}
 
+    @Test
+    @DisplayName("getPublicPassport: 공개 여권 URL 형태 입력에서도 qrPublicCode를 추출해 조회한다")
+    void getPublicPassport_extractsCodeFromUrlPayload() {
+        Asset asset = Asset.builder().id("A1").modelName("Model X").serialNumber("SN-001").build();
+        DigitalPassport passport = DigitalPassport.builder().id("P1").asset(asset).qrPublicCode("QR111").build();
+
+        when(passportRepository.findByQrPublicCodeIgnoreCase("QR111")).thenReturn(Optional.of(passport));
+        when(ownershipRepository.findById("P1")).thenReturn(Optional.empty());
+        when(ledgerRepository.findByPassportIdOrderBySeqAsc("P1")).thenReturn(List.of());
+
+        PassportPublicViewResult result = handler.getPublicPassport("https://localhost:5174/p/QR111?x=1");
+
+        assertThat(result.getQrPublicCode()).isEqualTo("QR111");
+    }
+}

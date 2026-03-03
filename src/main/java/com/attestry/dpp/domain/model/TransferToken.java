@@ -20,7 +20,8 @@ import java.util.UUID;
 public class TransferToken {
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final int EXPIRY_MINUTES = 15;
+    private static final int EXPIRY_MINUTES_QR = 15;
+    private static final int EXPIRY_MINUTES_CODE = 7 * 24 * 60; // 7 days
 
     @Version
     @Column(name = "version")
@@ -69,7 +70,6 @@ public class TransferToken {
     @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
 
-
     /**
      * 새로운 이전 토큰을 생성합니다.
      */
@@ -85,6 +85,8 @@ public class TransferToken {
                 ? UUID.randomUUID().toString().substring(0, 6).toUpperCase()
                 : null;
 
+        int expiryMinutes = (method == AcceptMethod.ONE_TIME_CODE) ? EXPIRY_MINUTES_CODE : EXPIRY_MINUTES_QR;
+
         return TransferToken.builder()
                 .id(token)
                 .passport(passport)
@@ -94,10 +96,9 @@ public class TransferToken {
                 .code(code)
                 .receiptNumber(receiptNumber)
                 .evidenceUrls(evidenceUrls)
-                .expiresAt(LocalDateTime.now().plusMinutes(EXPIRY_MINUTES))
+                .expiresAt(LocalDateTime.now().plusMinutes(expiryMinutes))
                 .build();
     }
-
 
     /**
      * 토큰이 현재 수락 가능한 상태인지 검증합니다.

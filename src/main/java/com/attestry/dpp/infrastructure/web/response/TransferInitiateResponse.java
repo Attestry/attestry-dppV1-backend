@@ -8,4 +8,5 @@ import lombok.AllArgsConstructor;
 public class TransferInitiateResponse {
     private final String transferToken;
     private final String code;
+    private final java.time.LocalDateTime expiresAt;
 }

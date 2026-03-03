@@ -35,6 +35,10 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
      */
     @Transactional
     public TransferInitiateResult initiateTransfer(TransferInitiateRequest request, String fromUserId) {
+        if (transferRepository.existsActiveTransferByPassportId(request.getPassportId(), TransferState.INITIATED)) {
+            throw new BadRequestException("이미 양도 진행중입니다. 기존 양도를 취소하거나 유지보수 기간이 종료되어야 새로운 양도를 시작할 수 있습니다.");
+        }
+
         DigitalPassport passport = findPassport(request.getPassportId());
         User fromUser = findUser(fromUserId);
         validateOwnership(passport.getId(), fromUserId);
@@ -58,9 +62,10 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
     }
 
     @Transactional
-    public void cancelTransfer(String tokenId) {
+    public void cancelTransfer(String tokenId, String requesterId) {
         TransferToken transfer = transferRepository.findById(tokenId)
                 .orElseThrow(() -> new NotFoundException("이전 토큰을 찾을 수 없습니다."));
+        validateCancelPermission(transfer, requesterId);
 
         try {
             transfer.cancel();
@@ -68,6 +73,15 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
             throw new BadRequestException(e.getMessage());
         }
         transferRepository.save(transfer);
+    }
+
+    private void validateCancelPermission(TransferToken transfer, String requesterId) {
+        if (transfer.getFromUser() == null) {
+            throw new BadRequestException("취소 권한 정보를 확인할 수 없습니다.");
+        }
+        if (!transfer.getFromUser().getId().equals(requesterId)) {
+            throw new BadRequestException("이전 취소 권한이 없습니다.");
+        }
     }
 
     private TransferToken findInitiatedTransfer(String tokenOrCode) {
@@ -113,13 +127,22 @@ public class TransferCommandUseCaseHandler implements TransferCommandUseCase {
     }
 
     private void recordTransferLedger(TransferToken transfer, User toUser) {
-        // 최초 클레임(판매처 -> 첫 소유자)과 일반 양도(소유자 -> 소유자)를 원장에서 구분
         LedgerAction action = transfer.isFirstClaim() ? LedgerAction.CLAIMED : LedgerAction.TRANSFER_COMPLETED;
         String actorRole = action == LedgerAction.CLAIMED ? "OWNER" : "SYSTEM";
-        ledgerService.recordEntry(transfer.getPassport(), action, actorRole, toUser.getId(), null, transfer.getId());
+        String fromOwnerId = transfer.getFromUser() != null ? transfer.getFromUser().getId() : null;
+        String toOwnerId = toUser.getId();
+        String transferData = String.format(
+                "{\"eventType\":\"%s\",\"fromOwnerId\":%s,\"toOwnerId\":\"%s\",\"transferMethod\":\"%s\",\"receiptIncluded\":%b}",
+                action.name(),
+                fromOwnerId == null ? "null" : "\"" + fromOwnerId + "\"",
+                toOwnerId,
+                transfer.getAcceptMethod().name(),
+                transfer.getReceiptNumber() != null && !transfer.getReceiptNumber().isEmpty());
+        ledgerService.recordEntry(transfer.getPassport(), action, actorRole, toUser.getId(), transferData,
+                transfer.getId());
     }
 
     private TransferInitiateResult toInitiateResponse(TransferToken transfer) {
-        return TransferInitiateResult.of(transfer.getId(), transfer.getCode());
+        return TransferInitiateResult.of(transfer.getId(), transfer.getCode(), transfer.getExpiresAt());
     }
 }

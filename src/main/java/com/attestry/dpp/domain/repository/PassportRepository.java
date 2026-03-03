@@ -9,6 +9,8 @@ public interface PassportRepository {
 
     Optional<DigitalPassport> findByQrPublicCode(String qrPublicCode);
 
+    Optional<DigitalPassport> findByQrPublicCodeIgnoreCase(String qrPublicCode);
+
     // 자산 ID로 직접 조회 — findAll() 전체 로드 방지
     Optional<DigitalPassport> findByAssetId(String assetId);
 

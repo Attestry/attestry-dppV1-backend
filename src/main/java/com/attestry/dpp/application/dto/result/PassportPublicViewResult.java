@@ -28,6 +28,9 @@ public class PassportPublicViewResult {
         private final String date;
         private final String action;
         private final String hash;
+        private final String prevHash;
+        private final String correlationId;
+        private final String dataJson;
         private final String actorName;
     }
 }

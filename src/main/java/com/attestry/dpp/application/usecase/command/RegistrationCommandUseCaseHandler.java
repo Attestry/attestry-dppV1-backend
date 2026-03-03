@@ -110,7 +110,11 @@ public class RegistrationCommandUseCaseHandler implements RegistrationCommandUse
         ownershipRepository.save(ownership);
 
         // 등록 승인 경로의 최초 소유권 부여를 원장에 남김
-        ledgerService.recordEntry(passport, LedgerAction.CLAIMED, "OWNER", owner.getId(), null, correlationId);
+        String claimData = String.format(
+                "{\"eventType\":\"%s\",\"fromOwnerId\":null,\"toOwnerId\":\"%s\",\"registrationMethod\":\"APP_ISSUED\",\"evidenceVerified\":true}",
+                LedgerAction.CLAIMED.name(),
+                owner.getId());
+        ledgerService.recordEntry(passport, LedgerAction.CLAIMED, "OWNER", owner.getId(), claimData, correlationId);
     }
 
     private RegistrationRequestResult toResponse(RegistrationRequest entity) {
