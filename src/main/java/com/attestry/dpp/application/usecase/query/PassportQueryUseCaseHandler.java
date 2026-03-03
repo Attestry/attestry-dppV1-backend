@@ -7,6 +7,7 @@ import com.attestry.dpp.domain.repository.*;
 import com.attestry.dpp.domain.exception.*;
 import com.attestry.dpp.domain.util.EvidenceUrlParser;
 import com.attestry.dpp.domain.util.NameMaskingUtil;
+import com.attestry.dpp.domain.util.QrPayloadParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,8 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
          */
         @Transactional(readOnly = true)
         public PassportPublicViewResult getPublicPassport(String qrPublicCode) {
-                DigitalPassport passport = passportRepository.findByQrPublicCode(qrPublicCode)
+                String normalizedCode = QrPayloadParser.extractPublicPassportCode(qrPublicCode);
+                DigitalPassport passport = passportRepository.findByQrPublicCodeIgnoreCase(normalizedCode)
                                 .orElseThrow(() -> new NotFoundException(
                                                 "해당 코드의 여권을 찾을 수 없습니다: " + qrPublicCode));
 
@@ -63,9 +65,6 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
                                 .map(o -> o.getSinceAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                                 .orElse("");
 
-                // 증빙 사진 URL 조회 — EvidenceUrlParser 사용
-                String evidenceUrl = findFirstEvidenceUrl(asset.getSerialNumber(), asset.getModelName());
-
                 // 원장 타임라인 조회
                 List<LedgerEntry> events = ledgerRepository.findByPassportIdOrderBySeqAsc(passport.getId());
                 List<PassportPublicViewResult.LedgerEvent> eventDtos = events.stream()
@@ -74,13 +73,14 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
 
                 return PassportPublicViewResult.builder()
                                 .passportId(passport.getId())
-                                .qrPublicCode(qrPublicCode)
+                                .qrPublicCode(passport.getQrPublicCode())
                                 .modelName(asset.getModelName())
                                 .modelNumber(asset.getSerialNumber())
                                 .isGenuine(true)
                                 .currentOwnerName(ownerName)
                                 .since(sinceDate)
-                                .imageUrl(evidenceUrl)
+                                // 공개 인증서의 대표 이미지는 프론트에서 qrPublicCode 기반 QR로 렌더링
+                                .imageUrl(null)
                                 .ledgerEvents(eventDtos)
                                 .build();
         }
@@ -133,9 +133,15 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
                                 .orElse(entry.getActorRole());
 
                 return PassportPublicViewResult.LedgerEvent.builder()
-                                .date(entry.getOccurredAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                                .date(java.time.ZonedDateTime
+                                                .of(entry.getOccurredAt(), java.time.ZoneId.systemDefault())
+                                                .withZoneSameInstant(java.time.ZoneId.of("Asia/Seoul"))
+                                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm ('KST')")))
                                 .action(entry.getEventAction().name())
-                                .hash(entry.getHashSummary())
+                                .hash(entry.getHash())
+                                .prevHash(entry.getPrevHash())
+                                .correlationId(entry.getCorrelationId())
+                                .dataJson(entry.getDataJson())
                                 .actorName(actorDisplay)
                                 .build();
         }

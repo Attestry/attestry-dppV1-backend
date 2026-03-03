@@ -49,6 +49,16 @@ public class TransferController {
         return ResponseEntity.ok(ApiResponse.success(TransferResponseMapper.toTransferDetailsResponse(result)));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<TransferInitiateResponse>> getActiveTransfer(
+            @RequestParam("passportId") String passportId) {
+        TransferInitiateResult result = transferQueryUseCase.getActiveTransfer(passportId);
+        if (result == null) {
+            return ResponseEntity.ok(ApiResponse.success(null));
+        }
+        return ResponseEntity.ok(ApiResponse.success(TransferResponseMapper.toTransferInitiateResponse(result)));
+    }
+
     @PostMapping("/cancel/{tokenId}")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<Void>> cancelTransfer(

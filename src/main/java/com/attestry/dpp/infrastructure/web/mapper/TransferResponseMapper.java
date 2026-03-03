@@ -11,7 +11,7 @@ public final class TransferResponseMapper {
     }
 
     public static TransferInitiateResponse toTransferInitiateResponse(TransferInitiateResult result) {
-        return TransferInitiateResponse.of(result.getTransferToken(), result.getCode());
+        return TransferInitiateResponse.of(result.getTransferToken(), result.getCode(), result.getExpiresAt());
     }
 
     public static TransferDetailsResponse toTransferDetailsResponse(TransferDetailsResult result) {

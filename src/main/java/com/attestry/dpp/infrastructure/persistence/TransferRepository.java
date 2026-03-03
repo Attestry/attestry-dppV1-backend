@@ -10,14 +10,22 @@ import java.util.Optional;
 
 public interface TransferRepository extends JpaRepository<TransferToken, String> {
 
-    Optional<TransferToken> findByCodeAndState(String code, TransferState state);
+        Optional<TransferToken> findByCodeAndState(String code, TransferState state);
 
-    /**
-     * ID 또는 6자리 코드로 INITIATED 상태의 토큰을 단일 쿼리로 조회합니다.
-     * 기존 findById → findByCode 이중 쿼리 방식을 단일 쿼리로 대체합니다.
-     */
-    @Query("SELECT t FROM TransferToken t WHERE t.id = :tokenOrCode OR (t.code = :tokenOrCode AND t.state = :state)")
-    Optional<TransferToken> findByIdOrCodeAndState(
-            @Param("tokenOrCode") String tokenOrCode,
-            @Param("state") TransferState state);
+        /**
+         * ID 또는 6자리 코드로 INITIATED 상태의 토큰을 단일 쿼리로 조회합니다.
+         * 기존 findById → findByCode 이중 쿼리 방식을 단일 쿼리로 대체합니다.
+         */
+        @Query("SELECT t FROM TransferToken t WHERE t.id = :tokenOrCode OR (t.code = :tokenOrCode AND t.state = :state)")
+        Optional<TransferToken> findByIdOrCodeAndState(
+                        @Param("tokenOrCode") String tokenOrCode,
+                        @Param("state") TransferState state);
+
+        @Query("SELECT COUNT(t) > 0 FROM TransferToken t WHERE t.passport.id = :passportId AND t.state = :state AND t.expiresAt > CURRENT_TIMESTAMP")
+        boolean existsActiveTransferByPassportId(
+                        @Param("passportId") String passportId,
+                        @Param("state") TransferState state);
+
+        Optional<TransferToken> findFirstByPassportIdAndStateAndExpiresAtAfterOrderByExpiresAtDesc(
+                        String passportId, TransferState state, java.time.LocalDateTime now);
 }
