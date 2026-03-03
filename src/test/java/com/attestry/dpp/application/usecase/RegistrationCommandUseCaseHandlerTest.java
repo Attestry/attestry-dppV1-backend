@@ -17,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -154,15 +158,17 @@ class RegistrationCommandUseCaseHandlerTest {
     @Test
     @DisplayName("요청자별 목록 조회가 정상 동작한다")
     void listRequestsByRequesterWorks() {
+        PageRequest pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         RegistrationRequest r1 = RegistrationRequest.builder()
                 .requestId("REQ-1").modelName("A").serialNumber("S1")
                 .requesterId("U_OWNER").status(RegistrationStatus.PENDING).createdAt(LocalDateTime.now()).build();
 
-        when(registrationRepository.findByRequesterId("U_OWNER")).thenReturn(List.of(r1));
+        when(registrationRepository.findByRequesterId("U_OWNER", pageable))
+                .thenReturn(new PageImpl<>(List.of(r1), pageable, 1));
 
-        List<RegistrationRequestResult> result = registrationQueryUseCaseHandler.listRequestsByRequester("U_OWNER");
+        Page<RegistrationRequestResult> result = registrationQueryUseCaseHandler.listRequestsByRequester("U_OWNER", pageable);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getModelName()).isEqualTo("A");
+        assertThat(result.getContent().get(0).getModelName()).isEqualTo("A");
     }
 }

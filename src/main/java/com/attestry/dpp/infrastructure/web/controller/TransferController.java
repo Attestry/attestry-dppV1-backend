@@ -15,6 +15,7 @@ import com.attestry.dpp.infrastructure.web.response.TransferInitiateResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,8 +50,11 @@ public class TransferController {
     }
 
     @PostMapping("/cancel/{tokenId}")
-    public ResponseEntity<ApiResponse<Void>> cancelTransfer(@PathVariable String tokenId) {
-        transferCommandUseCase.cancelTransfer(tokenId);
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<Void>> cancelTransfer(
+            @PathVariable String tokenId,
+            @AuthenticationPrincipal JwtUserDetails user) {
+        transferCommandUseCase.cancelTransfer(tokenId, user.getUserId());
         return ResponseEntity.ok(ApiResponse.successMessage(ResponseMessage.SUCCESS_TRANSFER_CANCELED));
     }
 }

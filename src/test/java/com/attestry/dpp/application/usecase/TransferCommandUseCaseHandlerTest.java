@@ -207,11 +207,15 @@ class TransferCommandUseCaseHandlerTest {
         @Test
         @DisplayName("INITIATED 상태의 양도를 취소할 수 있다")
         void canCancelInitiatedTransfer() {
-            TransferToken token = TransferToken.builder().id("tr_1").state(TransferState.INITIATED).build();
+            TransferToken token = TransferToken.builder()
+                    .id("tr_1")
+                    .state(TransferState.INITIATED)
+                    .fromUser(ownerUser)
+                    .build();
             when(transferRepository.findById("tr_1")).thenReturn(Optional.of(token));
             when(transferRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            transferCommandUseCaseHandler.cancelTransfer("tr_1");
+            transferCommandUseCaseHandler.cancelTransfer("tr_1", "U_OWNER");
 
             verify(transferRepository).save(argThat(t -> TransferState.CANCELLED.equals(t.getState())));
         }
@@ -219,11 +223,30 @@ class TransferCommandUseCaseHandlerTest {
         @Test
         @DisplayName("COMPLETED 상태의 양도를 취소하면 BadRequestException")
         void cannotCancelCompletedTransfer() {
-            TransferToken token = TransferToken.builder().id("tr_1").state(TransferState.COMPLETED).build();
+            TransferToken token = TransferToken.builder()
+                    .id("tr_1")
+                    .state(TransferState.COMPLETED)
+                    .fromUser(ownerUser)
+                    .build();
             when(transferRepository.findById("tr_1")).thenReturn(Optional.of(token));
 
-            assertThatThrownBy(() -> transferCommandUseCaseHandler.cancelTransfer("tr_1"))
+            assertThatThrownBy(() -> transferCommandUseCaseHandler.cancelTransfer("tr_1", "U_OWNER"))
                     .isInstanceOf(BadRequestException.class);
+        }
+
+        @Test
+        @DisplayName("발신자가 아닌 사용자는 양도를 취소할 수 없다")
+        void nonInitiatorCannotCancelTransfer() {
+            TransferToken token = TransferToken.builder()
+                    .id("tr_1")
+                    .state(TransferState.INITIATED)
+                    .fromUser(ownerUser)
+                    .build();
+            when(transferRepository.findById("tr_1")).thenReturn(Optional.of(token));
+
+            assertThatThrownBy(() -> transferCommandUseCaseHandler.cancelTransfer("tr_1", "U_OTHER"))
+                    .isInstanceOf(BadRequestException.class)
+                    .hasMessageContaining("취소 권한");
         }
     }
 }

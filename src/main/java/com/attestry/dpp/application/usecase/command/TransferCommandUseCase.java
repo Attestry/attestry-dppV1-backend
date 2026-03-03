@@ -6,5 +6,5 @@ import com.attestry.dpp.application.dto.result.TransferInitiateResult;
 public interface TransferCommandUseCase {
     TransferInitiateResult initiateTransfer(TransferInitiateRequest request, String fromUserId);
     void acceptTransfer(String tokenOrCode, String toUserId);
-    void cancelTransfer(String tokenId);
+    void cancelTransfer(String tokenId, String requesterId);
 }

@@ -17,3 +17,6 @@ src/main/resources/application-local.yml
 
 # Eclipse project metadata
 /.settings/
+/.classpath
+/.project
+/.factorypath

@@ -11,7 +11,7 @@ import java.util.List;
 public interface JpaRegistrationRepository extends JpaRepository<RegistrationRequest, String>, RegistrationRepository {
     Page<RegistrationRequest> findByStatus(RegistrationStatus status, Pageable pageable);
 
-    List<RegistrationRequest> findByRequesterId(String requesterId);
+    Page<RegistrationRequest> findByRequesterId(String requesterId, Pageable pageable);
 
     List<RegistrationRequest> findBySerialNumberAndModelName(String serialNumber, String modelName);
 }

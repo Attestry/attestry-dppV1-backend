@@ -50,8 +50,8 @@ public class AuthCommandUseCaseHandler implements AuthCommandUseCase {
                 .phone(request.getPhone())
                 .role(role)
                 .status(initialStatus)
-                .businessNumber(request.getBusinessNumber())
-                .brandName(request.getBrandName())
+                .businessNumber(blankToNull(request.getBusinessNumber()))
+                .brandName(blankToNull(request.getBrandName()))
                 .build();
 
         userRepository.save(user);
@@ -141,6 +141,10 @@ public class AuthCommandUseCaseHandler implements AuthCommandUseCase {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private String blankToNull(String value) {
+        return isBlank(value) ? null : value.trim();
     }
 
     private AuthRoleResult toAuthRoleResult(User.Role role) {
