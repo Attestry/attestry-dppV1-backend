@@ -32,7 +32,7 @@ public class DevDataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        createIfAbsent("U_ADMIN", "kimsunwook@naver.com", "010-1111-1111",
+        createIfAbsent("U_ADMIN", "kimsunwook@admin.com", "010-1111-1111",
                 "adminsw00@", User.Role.ADMIN, User.Status.ACTIVE);
 
         createIfAbsent("U_BRAND_01", "brand@test.com", "010-2222-2222",
