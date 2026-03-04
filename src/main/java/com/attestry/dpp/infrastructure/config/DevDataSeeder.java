@@ -25,11 +25,13 @@ public class DevDataSeeder implements CommandLineRunner {
         private final UserRepository userRepository;
         private final PasswordEncoder passwordEncoder;
 
-        @Override
-        @Transactional
-        public void run(String... args) {
-                upsert("U_ADMIN", "kimsunwook@naver.com", "010-1111-1111",
-                                "adminsw00@", User.Role.ADMIN, User.Status.ACTIVE);
+
+    @Override
+    @Transactional
+    public void run(String... args) {
+        createIfAbsent("U_ADMIN", "kimsunwook@admin.com", "010-1111-1111",
+                "adminsw00@", User.Role.ADMIN, User.Status.ACTIVE);
+
 
         }
 
