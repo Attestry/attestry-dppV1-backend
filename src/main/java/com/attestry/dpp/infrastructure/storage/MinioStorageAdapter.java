@@ -28,6 +28,9 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
     @Value("${minio.url:http://localhost:9000}")
     private String url;
 
+    @Value("${minio.public-url:}")
+    private String publicUrl;
+
     @Value("${minio.access-key:minioadmin}")
     private String accessKey;
 
@@ -59,13 +62,18 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
     public String createPresignedUploadUrl(String originalFilename) {
         try {
             String objectName = UUID.randomUUID() + "_" + originalFilename;
-            return minioClient.getPresignedObjectUrl(
+            String presignedUrl = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.PUT)
                             .bucket(bucketName)
                             .object(objectName)
                             .expiry(15, TimeUnit.MINUTES)
                             .build());
+            // Docker 내부 URL을 공개 URL로 교체 (브라우저 직접 업로드용)
+            if (publicUrl != null && !publicUrl.isBlank()) {
+                presignedUrl = presignedUrl.replace(url, publicUrl);
+            }
+            return presignedUrl;
         } catch (Exception e) {
             // 외부 스토리지 예외는 도메인 공통 예외 포맷으로 변환
             throw new CustomException(ErrorCode.INTERNAL_ERROR, "Error generating pre-signed URL: " + e.getMessage());
