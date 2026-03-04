@@ -9,10 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class StatsQueryUseCaseHandler implements StatsQueryUseCase {
+
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Seoul");
+    private static final ZoneId STORAGE_ZONE = ZoneOffset.UTC;
 
     private final LedgerRepository ledgerRepository;
 
@@ -21,8 +27,9 @@ public class StatsQueryUseCaseHandler implements StatsQueryUseCase {
      */
     @Transactional(readOnly = true)
     public TodayStatsResult getTodayStats() {
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        ZonedDateTime kstStart = LocalDate.now(BUSINESS_ZONE).atStartOfDay(BUSINESS_ZONE);
+        LocalDateTime startOfDay = kstStart.withZoneSameInstant(STORAGE_ZONE).toLocalDateTime();
+        LocalDateTime endOfDay = kstStart.plusDays(1).withZoneSameInstant(STORAGE_ZONE).toLocalDateTime();
 
         long assets = ledgerRepository.countByEventActionAndOccurredAtBetween(LedgerAction.MINTED, startOfDay, endOfDay);
         long transfers = ledgerRepository.countByEventActionAndOccurredAtBetween(
