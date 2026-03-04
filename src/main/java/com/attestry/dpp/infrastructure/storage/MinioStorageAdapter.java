@@ -9,12 +9,14 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class MinioStorageAdapter implements FileUploadUrlPort {
 
@@ -42,9 +44,10 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+                log.info("MinIO 버킷 생성 완료: {}", bucketName);
             }
         } catch (Exception e) {
-            throw new RuntimeException("MinIO 버킷 초기화 실패: " + e.getMessage(), e);
+            log.warn("MinIO 버킷 초기화 실패 (버킷이 이미 존재하거나 연결 문제): {}", e.getMessage());
         }
     }
 
