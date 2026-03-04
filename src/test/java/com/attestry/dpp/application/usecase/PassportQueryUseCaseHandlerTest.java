@@ -2,6 +2,7 @@ package com.attestry.dpp.application.usecase;
 
 import com.attestry.dpp.application.dto.result.PassportMyPassportResult;
 import com.attestry.dpp.application.dto.result.PassportPublicViewResult;
+import com.attestry.dpp.application.port.FileReadUrlPort;
 import com.attestry.dpp.application.usecase.query.PassportQueryUseCaseHandler;
 import com.attestry.dpp.domain.exception.NotFoundException;
 import com.attestry.dpp.domain.model.Asset;
@@ -32,6 +33,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +49,8 @@ class PassportQueryUseCaseHandlerTest {
     private UserRepository userRepository;
     @Mock
     private RegistrationRepository registrationRepository;
+    @Mock
+    private FileReadUrlPort fileReadUrlPort;
 
     @InjectMocks
     private PassportQueryUseCaseHandler handler;
@@ -121,6 +125,7 @@ class PassportQueryUseCaseHandlerTest {
         when(ownershipRepository.findByOwnerId("U1", PageRequest.of(0, 5)))
                 .thenReturn(new PageImpl<>(List.of(ownership), PageRequest.of(0, 5), 1));
         when(registrationRepository.findBySerialNumberAndModelName("SN-777", "Model Y")).thenReturn(List.of(request));
+        when(fileReadUrlPort.createPresignedReadUrl(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
         Page<PassportMyPassportResult> page = handler.getMyPassports("U1", PageRequest.of(0, 5));
 

@@ -1,6 +1,7 @@
 package com.attestry.dpp.infrastructure.storage;
 
 import com.attestry.dpp.application.port.FileUploadUrlPort;
+import com.attestry.dpp.application.port.FileReadUrlPort;
 import com.attestry.dpp.domain.exception.CustomException;
 import com.attestry.dpp.domain.exception.ErrorCode;
 import io.minio.BucketExistsArgs;
@@ -13,12 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class MinioStorageAdapter implements FileUploadUrlPort {
+public class MinioStorageAdapter implements FileUploadUrlPort, FileReadUrlPort {
 
     private MinioClient minioClient;
     private MinioClient presignMinioClient;
@@ -78,6 +80,49 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
         } catch (Exception e) {
             // 외부 스토리지 예외는 도메인 공통 예외 포맷으로 변환
             throw new CustomException(ErrorCode.INTERNAL_ERROR, "Error generating pre-signed URL: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String createPresignedReadUrl(String rawUrlOrObjectPath) {
+        if (!hasText(rawUrlOrObjectPath)) {
+            return rawUrlOrObjectPath;
+        }
+        String objectName = extractObjectName(rawUrlOrObjectPath);
+        if (!hasText(objectName)) {
+            return rawUrlOrObjectPath;
+        }
+
+        try {
+            return presignMinioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .expiry(15, TimeUnit.MINUTES)
+                            .build());
+        } catch (Exception e) {
+            log.warn("증빙 이미지 조회 URL 생성 실패. 원본 URL 반환: {}", e.getMessage());
+            return rawUrlOrObjectPath;
+        }
+    }
+
+    private String extractObjectName(String rawUrlOrObjectPath) {
+        String value = rawUrlOrObjectPath.trim();
+        try {
+            URI uri = URI.create(value);
+            String path = uri.getPath();
+            if (!hasText(path)) {
+                return value;
+            }
+            String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+            String bucketPrefix = bucketName + "/";
+            if (normalizedPath.startsWith(bucketPrefix)) {
+                return normalizedPath.substring(bucketPrefix.length());
+            }
+            return normalizedPath;
+        } catch (Exception ignored) {
+            return value;
         }
     }
 

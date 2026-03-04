@@ -1,6 +1,7 @@
 package com.attestry.dpp.application.usecase;
 
 import com.attestry.dpp.application.dto.result.RegistrationRequestResult;
+import com.attestry.dpp.application.port.FileReadUrlPort;
 import com.attestry.dpp.application.usecase.query.RegistrationQueryUseCaseHandler;
 import com.attestry.dpp.domain.model.RegistrationRequest;
 import com.attestry.dpp.domain.model.RegistrationStatus;
@@ -26,6 +27,8 @@ class RegistrationQueryUseCaseHandlerTest {
 
     @Mock
     private RegistrationRepository registrationRepository;
+    @Mock
+    private FileReadUrlPort fileReadUrlPort;
 
     @InjectMocks
     private RegistrationQueryUseCaseHandler handler;
@@ -54,4 +57,3 @@ class RegistrationQueryUseCaseHandlerTest {
         assertThat(result.getContent().get(0).getStatus()).isEqualTo("PENDING");
     }
 }
-
