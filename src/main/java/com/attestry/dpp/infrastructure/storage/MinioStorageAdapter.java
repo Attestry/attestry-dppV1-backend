@@ -3,7 +3,9 @@ package com.attestry.dpp.infrastructure.storage;
 import com.attestry.dpp.application.port.FileUploadUrlPort;
 import com.attestry.dpp.domain.exception.CustomException;
 import com.attestry.dpp.domain.exception.ErrorCode;
+import io.minio.BucketExistsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
@@ -36,6 +38,14 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
                 .endpoint(url)
                 .credentials(accessKey, secretKey)
                 .build();
+        try {
+            boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!exists) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("MinIO 버킷 초기화 실패: " + e.getMessage(), e);
+        }
     }
 
     /**
