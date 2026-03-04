@@ -13,7 +13,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - CORS_ALLOWED_ORIGINS=https://attestry-dpp-v1-frontend.vercel.app
       - MINIO_URL=http://minio:9000
-      - MINIO_PUBLIC_URL=http://storage.attestry-dpp.shop
+      - MINIO_PUBLIC_URL=https://storage.attestry-dpp.shop
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
     depends_on:
@@ -44,7 +44,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_API_CORS_ALLOW_ORIGIN: "*"
-      MINIO_SERVER_URL: http://storage.attestry-dpp.shop
+      MINIO_SERVER_URL: https://storage.attestry-dpp.shop
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data

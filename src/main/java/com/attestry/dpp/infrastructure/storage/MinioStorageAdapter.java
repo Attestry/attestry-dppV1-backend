@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class MinioStorageAdapter implements FileUploadUrlPort {
 
     private MinioClient minioClient;
+    private MinioClient presignMinioClient;
 
     @Value("${minio.bucket-name:dpp-evidence}")
     private String bucketName;
@@ -43,6 +44,11 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
                 .endpoint(url)
                 .credentials(accessKey, secretKey)
                 .build();
+        String presignEndpoint = hasText(publicUrl) ? publicUrl : url;
+        this.presignMinioClient = MinioClient.builder()
+                .endpoint(presignEndpoint)
+                .credentials(accessKey, secretKey)
+                .build();
         try {
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
@@ -62,21 +68,20 @@ public class MinioStorageAdapter implements FileUploadUrlPort {
     public String createPresignedUploadUrl(String originalFilename) {
         try {
             String objectName = UUID.randomUUID() + "_" + originalFilename;
-            String presignedUrl = minioClient.getPresignedObjectUrl(
+            return presignMinioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.PUT)
                             .bucket(bucketName)
                             .object(objectName)
                             .expiry(15, TimeUnit.MINUTES)
                             .build());
-            // Docker 내부 URL을 공개 URL로 교체 (브라우저 직접 업로드용)
-            if (publicUrl != null && !publicUrl.isBlank()) {
-                presignedUrl = presignedUrl.replace(url, publicUrl);
-            }
-            return presignedUrl;
         } catch (Exception e) {
             // 외부 스토리지 예외는 도메인 공통 예외 포맷으로 변환
             throw new CustomException(ErrorCode.INTERNAL_ERROR, "Error generating pre-signed URL: " + e.getMessage());
         }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }
