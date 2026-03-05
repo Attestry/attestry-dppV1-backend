@@ -2,6 +2,7 @@ package com.attestry.dpp.application.usecase.query;
 
 import com.attestry.dpp.application.dto.result.PassportMyPassportResult;
 import com.attestry.dpp.application.dto.result.PassportPublicViewResult;
+import com.attestry.dpp.application.port.FileReadUrlPort;
 import com.attestry.dpp.domain.model.*;
 import com.attestry.dpp.domain.repository.*;
 import com.attestry.dpp.domain.exception.*;
@@ -33,6 +34,7 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
         private final OwnershipRepository ownershipRepository;
         private final UserRepository userRepository;
         private final RegistrationRepository registrationRepository;
+        private final FileReadUrlPort fileReadUrlPort;
 
         /**
          * QR 공개 코드로 공개 인증서를 조회합니다.
@@ -121,7 +123,8 @@ public class PassportQueryUseCaseHandler implements PassportQueryUseCase {
                 if (requests.isEmpty()) {
                         return null;
                 }
-                return EvidenceUrlParser.firstOrNull(requests.get(0).getEvidenceUrls());
+                String rawUrl = EvidenceUrlParser.firstOrNull(requests.get(0).getEvidenceUrls());
+                return fileReadUrlPort.createPresignedReadUrl(rawUrl);
         }
 
         /**

@@ -57,9 +57,11 @@ public class DevDataSeeder implements CommandLineRunner {
                 .password(passwordEncoder.encode(rawPassword))
                 .role(role)
                 .status(status)
+
                 .businessNumber(existing.getBusinessNumber())
                 .brandName(existing.getBrandName())
                 .build();
         userRepository.save(synced);
+
     }
 }

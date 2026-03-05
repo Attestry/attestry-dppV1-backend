@@ -76,7 +76,7 @@ Use `@AuthenticationPrincipal JwtUserDetails principal` in controllers to extrac
 
 | Role | Email | Password |
 |------|-------|----------|
-| ADMIN | kimsunwook@naver.com | adminsw00@ |
+| ADMIN | kimsunwook@admin.com | adminsw00@ |
 | BRAND | brand@test.com | brand123! |
 | OWNER | owner@test.com | owner123! |
 | PROVIDER | provider@test.com | provider123! |
